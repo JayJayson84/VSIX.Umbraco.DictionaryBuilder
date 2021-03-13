@@ -1,0 +1,1 @@
+# VSIX.Umbraco.DictionaryBuilder
