@@ -26,7 +26,7 @@ namespace DictionaryBuilder
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(PackageGuidString)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideOptionPage(typeof(OptionsDialog), "Umbraco", "DictionaryBuilder", 0, 0, true)]
+    [ProvideOptionPage(typeof(OptionsDialog), "Umbraco", "DictionaryBuilder Options", 0, 0, true)]
     public sealed class DictionaryBuilderPackage : AsyncPackage
     {
         /// <summary>

@@ -14,6 +14,7 @@ namespace DictionaryBuilder
     /// <summary>
     /// Provides user options and helper methods to save and retrieve to a local project file.
     /// </summary>
+    [XmlRoot(elementName: "DictionaryBuilderOptions")]
     public sealed class VisualStudioOptions
     {
 
@@ -21,11 +22,11 @@ namespace DictionaryBuilder
 
         public const int DEFAULT_PORT = 1433;
         public const string DEFAULT_NAMESPACE = "{project}.{path}";
-        public const string DEFAULT_CULTURE_MODEL_PATH = "/Models/UmbracoCulture.cs";
+        public const string DEFAULT_CULTURE_MODEL_PATH = "/Models/Dictionary/UmbracoCulture.cs";
         public const string DEFAULT_CULTURE_MODEL_NAMESPACE = "Umbraco.Core.Models.Language";
-        public const string DEFAULT_DICTIONARY_MODEL_PATH = "/Models/Dictionary.cs";
+        public const string DEFAULT_DICTIONARY_MODEL_PATH = "/Models/Dictionary/Dictionary.cs";
         public const string DEFAULT_DICTIONARY_MODEL_NAMESPACE = "Umbraco.Core.Models.Dictionary";
-        public const string DEFAULT_DICTIONARYKEY_MODEL_PATH = "/Models/DictionaryKey.cs";
+        public const string DEFAULT_DICTIONARYKEY_MODEL_PATH = "/Models/Dictionary/DictionaryKey.cs";
         public const string DEFAULT_DICTIONARYKEY_MODEL_NAMESPACE = "Umbraco.Core.Models.Dictionary";
         public const string DEFAULT_SERVICE_PATH = "/Services/Implement/DictionaryService.cs";
         public const string DEFAULT_SERVICE_NAMESPACE = "Umbraco.Core.Services.Implement";

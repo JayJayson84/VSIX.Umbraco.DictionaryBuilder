@@ -34,6 +34,12 @@ namespace DictionaryBuilder.Models
             .ToArray();
 
         /// <summary>
+        /// Gets all <see cref="DictionaryItemDto"/> items ordered by key.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerable{DictionaryItemDto}"/> of all items ordered by key.</returns>
+        public IEnumerable<DictionaryItemDto> OrderedItems => Items.OrderBy(x => x.Key);
+
+        /// <summary>
         /// Gets an <see cref="IEnumerable{DictionaryItemDto}"/> of top level dictionary records.
         /// </summary>
         public IEnumerable<DictionaryItemDto> RootItems => Items?
