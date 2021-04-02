@@ -1,0 +1,151 @@
+﻿using System.IO;
+using System.Text;
+
+namespace DictionaryBuilder
+{
+    internal sealed partial class DictionaryHelper
+    {
+
+        #region " Public Methods "
+
+        /// <summary>
+        /// Writes the dictionary service interface methods to a class file in the specified location.
+        /// </summary>
+        /// <param name="namespace">The namespace of the encapsulated interface class.</param>
+        /// <param name="filePath">The full path of the file that will be written.</param>
+        public static void WriteDictionaryServiceInterface(string @namespace, string filePath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            var sb = new StringBuilder();
+
+            sb.Append("using System;")
+              .AppendLine()
+              .Append("using System.Globalization;")
+              .AppendLine()
+              .Append("using Umbraco.Core.Models;")
+              .AppendLine()
+              .AppendLine()
+              .Append($"namespace {@namespace}")
+              .AppendLine()
+              .Append("{")
+              .AppendLine()
+              .Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append("/// Defines the Dictionary Service, which provides operations to easily retrieve localised Dictionary members.")
+              .AppendLine()
+              .Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append("public interface IDictionaryService")
+              .AppendLine()
+              .Append(Indent).Append("{")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// Gets an <see cref=\"IDictionaryItem\"/> from the description attribute of a <see cref=\"DictionaryKey\"/> enum.")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"key\">A <see cref=\"DictionaryKey\"/> member.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <returns>An <see cref=\"IDictionaryItem\"/> item.</returns>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("IDictionaryItem GetDictionaryItemByKey(DictionaryKey key);")
+              .AppendLine()
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// Gets an <see cref=\"IDictionaryItem\"/> by it's key.")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"key\">The dictionary key value.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <returns>An <see cref=\"IDictionaryItem\"/> item.</returns>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("IDictionaryItem GetDictionaryItemByKey(string key);")
+              .AppendLine()
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// Gets the value of the dictionary item with the matching <paramref name=\"key\"/> and <paramref name=\"culture\"/>.")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"key\">A <see cref=\"DictionaryKey\"/> member.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"culture\">Optionally specify the <see cref=\"CultureInfo\"/> of the dictionary value to return.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <returns>A locale <see cref=\"string\"/> for the dictionary item with matching <paramref name=\"key\"/> and <paramref name=\"culture\"/>. Otherwise <see langword=\"null\"/>.</returns>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <remarks>If a <paramref name=\"culture\"/> is not provided, the project's default <see cref=\"CultureInfo\"/> will be used.</remarks>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("string GetLocaleValueByKey(DictionaryKey key, CultureInfo culture = null);")
+              .AppendLine()
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// Gets the value of the dictionary item with the matching <paramref name=\"key\"/> and <paramref name=\"culture\"/>.")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"key\">The dictionary key.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"culture\">Optionally specify the <see cref=\"CultureInfo\"/> of the dictionary value to return.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <returns>A locale <see cref=\"string\"/> for the dictionary item with matching <paramref name=\"key\"/> and <paramref name=\"culture\"/>. Otherwise <see langword=\"null\"/>.</returns>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <remarks>If a <paramref name=\"culture\"/> is not provided, the project's default <see cref=\"CultureInfo\"/> will be used.</remarks>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("string GetLocaleValueByKey(string key, CultureInfo culture = null);")
+              .AppendLine()
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// Gets the formatted value of the dictionary item with the matching <paramref name=\"key\"/> and <paramref name=\"culture\"/>.")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"key\">A <see cref=\"DictionaryKey\"/> member.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"formatArgs\">An array of string representation to replace within a composite format string.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"culture\">Optionally specify the <see cref=\"CultureInfo\"/> of the dictionary value to return.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <returns>A locale <see cref=\"string\"/> for the dictionary item with matching <paramref name=\"key\"/> and <paramref name=\"culture\"/> and format items replaced by the representation <paramref name=\"formatArgs\"/>. Otherwise <see langword=\"null\"/>.</returns>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <remarks>If a <paramref name=\"culture\"/> is not provided, the project's default <see cref=\"CultureInfo\"/> will be used.</remarks>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("string GetFormattedLocaleValueByKey(DictionaryKey key, string[] formatArgs, CultureInfo culture = null);")
+              .AppendLine()
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// Gets the formatted value of the dictionary item with the matching <paramref name=\"key\"/> and <paramref name=\"culture\"/>.")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// </summary>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"key\">The dictionary key.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"formatArgs\">An array of string representation to replace within a composite format string.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <param name=\"culture\">Optionally specify the <see cref=\"CultureInfo\"/> of the dictionary value to return.</param>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <returns>A locale <see cref=\"string\"/> for the dictionary item with matching <paramref name=\"key\"/> and <paramref name=\"culture\"/> and format items replaced by the representation <paramref name=\"formatArgs\"/>. Otherwise <see langword=\"null\"/>.</returns>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("/// <remarks>If a <paramref name=\"culture\"/> is not provided, the project's default <see cref=\"CultureInfo\"/> will be used.</remarks>")
+              .AppendLine()
+              .Append(Indent).Append(Indent).Append("string GetFormattedLocaleValueByKey(string key, string[] formatArgs, CultureInfo culture = null);")
+              .AppendLine()
+              .Append(Indent).Append("}")
+              .AppendLine()
+              .Append("}")
+              .AppendLine();
+
+            File.WriteAllText(filePath, sb.ToString());
+        }
+
+        #endregion
+
+    }
+}
