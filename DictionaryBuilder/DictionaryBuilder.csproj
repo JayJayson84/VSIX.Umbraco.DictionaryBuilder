@@ -46,6 +46,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Attributes\SortableCategoryAttribute.cs" />
+    <Compile Include="Commands\SyncDevelopmentToLive.cs" />
+    <Compile Include="Commands\SyncLiveToDevelopment.cs" />
+    <Compile Include="Commands\SyncLiveToStaging.cs" />
+    <Compile Include="Commands\SyncStagingToLive.cs" />
+    <Compile Include="Commands\SyncStagingToDevelopment.cs" />
+    <Compile Include="Commands\SyncDevelopmentToStaging.cs" />
+    <Compile Include="Commands\RemoveDictionary.cs" />
+    <Compile Include="Enums\DialogResult.cs" />
+    <Compile Include="Enums\EncryptionMethod.cs" />
+    <Compile Include="Enums\SqlConnectionType.cs" />
     <Compile Include="Extensions\ByteArrayExtensions.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
@@ -57,12 +67,16 @@
     <Compile Include="Helpers\Dictionary\WriteDictionaryServiceInterface.cs" />
     <Compile Include="Helpers\Dictionary\WriteLanguageCultureModel.cs" />
     <Compile Include="Helpers\LogHelper.cs" />
+    <Compile Include="Helpers\MessageBoxHelper.cs" />
+    <Compile Include="Helpers\PathHelper.cs" />
     <Compile Include="Helpers\VisualStudioHelper.cs" />
     <Compile Include="Models\LanguageItemDto.cs" />
     <Compile Include="Models\LanguageDto.cs" />
     <Compile Include="Models\DictionaryDto.cs" />
     <Compile Include="Models\DictionaryItemDto.cs" />
     <Compile Include="Models\EncryptionKeys.cs" />
+    <Compile Include="Models\SqlConnections.cs" />
+    <Compile Include="Models\SqlCredentials.cs" />
     <Compile Include="Options\OptionsDialog.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -113,13 +127,14 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\RebuildDictionary.png" />
+    <Content Include="Resources\DictionaryIcons.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UserControls\OptionsControl.resx">
       <DependentUpon>OptionsControl.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
