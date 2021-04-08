@@ -1,4 +1,4 @@
-﻿using DictionaryBuilder.Models;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -13,22 +13,28 @@ namespace DictionaryBuilder
         /// Writes the dictionary service methods to a class file in the specified location.
         /// </summary>
         /// <param name="namespace">The namespace of the encapsulated service class.</param>
+        /// <param name="iServiceNamespace">The namespace of the encapsulated interface class.</param>
         /// <param name="filePath">The full path of the file that will be written.</param>
-        public static void WriteDictionaryService(string @namespace, string filePath)
+        public static void WriteDictionaryService(string @namespace, string iServiceNamespace, string filePath)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             var sb = new StringBuilder();
 
-            sb.Append("using System;")
-              .AppendLine()
-              .Append("using System.Globalization;")
-              .AppendLine()
-              .Append("using Umbraco.Core.Composing;")
-              .AppendLine()
-              .Append("using Umbraco.Core.Models;")
-              .AppendLine()
-              .AppendLine()
+            var namespaces = new List<string>() { "System", "System.Globalization", "Umbraco.Core.Composing", "Umbraco.Core.Models" };
+
+            if (!string.IsNullOrWhiteSpace(iServiceNamespace) && @namespace != iServiceNamespace)
+            {
+                namespaces.Add(iServiceNamespace);
+                namespaces.Sort();
+            }
+
+            foreach (var ns in namespaces)
+            {
+                sb.AppendLine($"using {ns};");
+            }
+
+            sb.AppendLine()
               .Append($"namespace {@namespace}")
               .AppendLine()
               .Append("{")
