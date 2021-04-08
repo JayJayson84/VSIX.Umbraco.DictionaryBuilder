@@ -1,4 +1,5 @@
 ﻿using DictionaryBuilder.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -12,18 +13,30 @@ namespace DictionaryBuilder
         /// <summary>
         /// Writes the dictionary models to a hierarchial class file in the specified location.
         /// </summary>
-        /// <param name="namespace">The namespace of the encapsulated models classes.</param>
+        /// <param name="namespace">The namespace of the encapsulated model classes.</param>
+        /// <param name="dictionaryKeyModelNamespace">The namespace of the encapsulated DictionaryKey model class.</param>
         /// <param name="filePath">The full path of the file that will be written.</param>
         /// <param name="dictionary">A reference to the <see cref="DictionaryDto"/>.</param>
-        public static void WriteDictionaryModel(string @namespace, string filePath, DictionaryDto dictionary)
+        public static void WriteDictionaryModel(string @namespace, string dictionaryKeyModelNamespace, string filePath, DictionaryDto dictionary)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             var sb = new StringBuilder();
 
-            sb.Append("using System;")
-              .AppendLine()
-              .AppendLine()
+            var namespaces = new List<string>() { "System" };
+
+            if (!string.IsNullOrWhiteSpace(dictionaryKeyModelNamespace) && @namespace != dictionaryKeyModelNamespace)
+            {
+                namespaces.Add(dictionaryKeyModelNamespace);
+                namespaces.Sort();
+            }
+
+            foreach (var ns in namespaces)
+            {
+                sb.AppendLine($"using {ns};");
+            }
+
+            sb.AppendLine()
               .Append($"namespace {@namespace}")
               .AppendLine()
               .Append("{")

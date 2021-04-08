@@ -1,11 +1,10 @@
 ﻿using DictionaryBuilder.Extensions;
-using DictionaryBuilder.Services;
+using DictionaryBuilder.Models;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.ExtendedAttributes;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -20,7 +19,8 @@ namespace DictionaryBuilder
 
         #region " Constants "
 
-        public const int DEFAULT_PORT = 1433;
+        public const SqlConnectionType DEFAULT_DICTIONARY_SOURCE = SqlConnectionType.Development;
+        public const EncryptionMethod DEFAULT_ENCRYPTION_METHOD = EncryptionMethod.Common;
         public const string DEFAULT_NAMESPACE = "{project}.{path}";
         public const string DEFAULT_CULTURE_MODEL_PATH = "/Models/Dictionary/UmbracoCulture.cs";
         public const string DEFAULT_CULTURE_MODEL_NAMESPACE = "Umbraco.Core.Models.Language";
@@ -41,121 +41,259 @@ namespace DictionaryBuilder
 
         public static readonly VisualStudioOptions Instance = new VisualStudioOptions();
 
-        private string PasswordMask;
+        #endregion
+
+        #region " Constructors " 
+
+        public VisualStudioOptions()
+        {
+            SqlConnections = new SqlConnections();
+        }
 
         #endregion
 
         #region " Properties "
 
-        [SortableCategory("SQL Connection", 1, 5)]
+        [SortableCategory("Dictionary Options", 1, 8)]
+        [DisplayName("Dictionary Source")]
+        [Description("Choose the source SQL connection to use when rebuilding the dictionary classes.")]
+        [DefaultValue(DEFAULT_DICTIONARY_SOURCE)]
+        [TypeConverter(typeof(EnumConverter))]
+        public SqlConnectionType DictionarySource { get; set; } = DEFAULT_DICTIONARY_SOURCE;
+
+        [SortableCategory("Encryption Options", 2, 8)]
+        [DisplayName("Encryption Method")]
+        [Description("Choose the type of encryption key to use when saving SQL passwords. Use Common for shared repositories or System for use with a single device. Re-enter your password(s) after changing this value.")]
+        [DefaultValue(DEFAULT_ENCRYPTION_METHOD)]
+        [TypeConverter(typeof(EnumConverter))]
+        public EncryptionMethod EncryptionMethod { get; set; } = DEFAULT_ENCRYPTION_METHOD;
+
+        [SortableCategory("SQL Connection (Development)", 3, 8)]
         [DisplayName("Hostname")]
-        [Description("The host domain/IP address of the SQL server.")]
-        public string Hostname { get; set; }
+        [Description("The host domain/IP address of the development SQL server.")]
+        [XmlIgnore]
+        public string SqlDevelopmentHostname
+        {
+            get => SqlConnections.Development.Hostname;
+            set => SqlConnections.Development.Hostname = value;
+        }
 
-        [SortableCategory("SQL Connection", 1, 5)]
+        [SortableCategory("SQL Connection (Development)", 3, 8)]
         [DisplayName("Port")]
-        [Description("The connection port of the SQL server. Default: 1433")]
-        [DefaultValue(DEFAULT_PORT)]
-        public int Port { get; set; } = DEFAULT_PORT;
+        [Description("The connection port of the development SQL server. Default: " + SqlCredentials.DEFAULT_PORT_STRING)]
+        [DefaultValue(SqlCredentials.DEFAULT_PORT)]
+        [XmlIgnore]
+        public int SqlDevelopmentPort
+        {
+            get => SqlConnections.Development.Port;
+            set => SqlConnections.Development.Port = value;
+        }
 
-        [SortableCategory("SQL Connection", 1, 5)]
+        [SortableCategory("SQL Connection (Development)", 3, 8)]
         [DisplayName("Database")]
-        [Description("The name of the SQL database.")]
-        public string Database { get; set; }
+        [Description("The name of the development SQL database.")]
+        [XmlIgnore]
+        public string SqlDevelopmentDatabase
+        {
+            get => SqlConnections.Development.Database;
+            set => SqlConnections.Development.Database = value;
+        }
 
-        [SortableCategory("SQL Credentials", 2, 5)]
+        [SortableCategory("SQL Connection (Development)", 3, 8)]
         [DisplayName("Username")]
-        [Description("The username credential to connect to the SQL server.")]
-        public string Username { get; set; }
+        [Description("The username credential to connect to the development SQL server.")]
+        [XmlIgnore]
+        public string SqlDevelopmentUsername
+        {
+            get => SqlConnections.Development.Username;
+            set => SqlConnections.Development.Username = value;
+        }
 
-        [SortableCategory("SQL Credentials", 2, 5)]
+        [SortableCategory("SQL Connection (Development)", 3, 8)]
         [DisplayName("Password")]
         [PasswordPropertyText(true)]
-        [Description("The password credential to connect to the SQL server.")]
+        [Description("The password credential to connect to the development SQL server.")]
         [XmlIgnore]
-        public string Password
+        public string SqlDevelopmentPassword
         {
-            get
-            {
-                return PasswordMask;
-            }
-            set
-            {
-                SetPassword(value);
-            }
+            get => SqlConnections.Development.PasswordMask;
+            set => SqlConnections.Development.SetPassword(value, EncryptionMethod);
+        }
+
+        [SortableCategory("SQL Connection (Staging)", 4, 8)]
+        [DisplayName("Hostname")]
+        [Description("The host domain/IP address of the staging SQL server.")]
+        [XmlIgnore]
+        public string SqlStagingHostname
+        {
+            get => SqlConnections.Staging.Hostname;
+            set => SqlConnections.Staging.Hostname = value;
+        }
+
+        [SortableCategory("SQL Connection (Staging)", 4, 8)]
+        [DisplayName("Port")]
+        [Description("The connection port of the staging SQL server. Default: " + SqlCredentials.DEFAULT_PORT_STRING)]
+        [DefaultValue(SqlCredentials.DEFAULT_PORT)]
+        [XmlIgnore]
+        public int SqlStagingPort
+        {
+            get => SqlConnections.Staging.Port;
+            set => SqlConnections.Staging.Port = value;
+        }
+
+        [SortableCategory("SQL Connection (Staging)", 4, 8)]
+        [DisplayName("Database")]
+        [Description("The name of the staging SQL database.")]
+        [XmlIgnore]
+        public string SqlStagingDatabase
+        {
+            get => SqlConnections.Staging.Database;
+            set => SqlConnections.Staging.Database = value;
+        }
+
+        [SortableCategory("SQL Connection (Staging)", 4, 8)]
+        [DisplayName("Username")]
+        [Description("The username credential to connect to the staging SQL server.")]
+        [XmlIgnore]
+        public string SqlStagingUsername
+        {
+            get => SqlConnections.Staging.Username;
+            set => SqlConnections.Staging.Username = value;
+        }
+
+        [SortableCategory("SQL Connection (Staging)", 4, 8)]
+        [DisplayName("Password")]
+        [PasswordPropertyText(true)]
+        [Description("The password credential to connect to the staging SQL server.")]
+        [XmlIgnore]
+        public string SqlStagingPassword
+        {
+            get => SqlConnections.Staging.PasswordMask;
+            set => SqlConnections.Staging.SetPassword(value, EncryptionMethod);
+        }
+
+        [SortableCategory("SQL Connection (Live)", 5, 8)]
+        [DisplayName("Hostname")]
+        [Description("The host domain/IP address of the live SQL server.")]
+        [XmlIgnore]
+        public string SqlLiveHostname
+        {
+            get => SqlConnections.Live.Hostname;
+            set => SqlConnections.Live.Hostname = value;
+        }
+
+        [SortableCategory("SQL Connection (Live)", 5, 8)]
+        [DisplayName("Port")]
+        [Description("The connection port of the live SQL server. Default: " + SqlCredentials.DEFAULT_PORT_STRING)]
+        [DefaultValue(SqlCredentials.DEFAULT_PORT)]
+        [XmlIgnore]
+        public int SqlLivePort
+        {
+            get => SqlConnections.Live.Port;
+            set => SqlConnections.Live.Port = value;
+        }
+
+        [SortableCategory("SQL Connection (Live)", 5, 8)]
+        [DisplayName("Database")]
+        [Description("The name of the live SQL database.")]
+        [XmlIgnore]
+        public string SqlLiveDatabase
+        {
+            get => SqlConnections.Live.Database;
+            set => SqlConnections.Live.Database = value;
+        }
+
+        [SortableCategory("SQL Connection (Live)", 5, 8)]
+        [DisplayName("Username")]
+        [Description("The username credential to connect to the live SQL server.")]
+        [XmlIgnore]
+        public string SqlLiveUsername
+        {
+            get => SqlConnections.Live.Username;
+            set => SqlConnections.Live.Username = value;
+        }
+
+        [SortableCategory("SQL Connection (Live)", 5, 8)]
+        [DisplayName("Password")]
+        [PasswordPropertyText(true)]
+        [Description("The password credential to connect to the live SQL server.")]
+        [XmlIgnore]
+        public string SqlLivePassword
+        {
+            get => SqlConnections.Live.PasswordMask;
+            set => SqlConnections.Live.SetPassword(value, EncryptionMethod);
         }
 
         [Browsable(false)]
-        [XmlElement(elementName: "Password")]
-        public string EncryptedPassword { get; set; }
+        public SqlConnections SqlConnections { get; set; }
 
-        [SortableCategory("Model Options", 3, 5)]
+        [SortableCategory("Model Options", 6, 8)]
         [DisplayName("Culture namespace")]
         [Description("A namespace for the language culture models. Enter a static string and/or use valid macros: {project}, {path}. Default value: " + DEFAULT_CULTURE_MODEL_NAMESPACE)]
         [DefaultValue(DEFAULT_CULTURE_MODEL_NAMESPACE)]
         public string CultureModelNamespace { get; set; } = DEFAULT_CULTURE_MODEL_NAMESPACE;
 
-        [SortableCategory("Model Options", 3, 5)]
+        [SortableCategory("Model Options", 6, 8)]
         [DisplayName("Culture path")]
         [Description("A file path, relative to the project, where the language culture models will be exported. Default value: " + DEFAULT_CULTURE_MODEL_PATH)]
         [DefaultValue(DEFAULT_CULTURE_MODEL_PATH)]
         public string CultureModelPath { get; set; } = DEFAULT_CULTURE_MODEL_PATH;
 
-        [SortableCategory("Model Options", 3, 5)]
+        [SortableCategory("Model Options", 6, 8)]
         [DisplayName("Dictionary namespace")]
         [Description("A namespace for the dictionary models. Enter a static string and/or use valid macros: {project}, {path}. Default value: " + DEFAULT_DICTIONARY_MODEL_NAMESPACE)]
         [DefaultValue(DEFAULT_DICTIONARY_MODEL_NAMESPACE)]
         public string DictionaryModelNamespace { get; set; } = DEFAULT_DICTIONARY_MODEL_NAMESPACE;
 
-        [SortableCategory("Model Options", 3, 5)]
+        [SortableCategory("Model Options", 6, 8)]
         [DisplayName("Dictionary path")]
         [Description("A file path, relative to the project, where the dictionary models will be exported. Default value: " + DEFAULT_DICTIONARY_MODEL_PATH)]
         [DefaultValue(DEFAULT_DICTIONARY_MODEL_PATH)]
         public string DictionaryModelPath { get; set; } = DEFAULT_DICTIONARY_MODEL_PATH;
 
-        [SortableCategory("Model Options", 3, 5)]
+        [SortableCategory("Model Options", 6, 8)]
         [DisplayName("DictionaryKey namespace")]
         [Description("A namespace for the dictionarykey models. Enter a static string and/or use valid macros: {project}, {path}. Default value: " + DEFAULT_DICTIONARYKEY_MODEL_NAMESPACE)]
         [DefaultValue(DEFAULT_DICTIONARYKEY_MODEL_NAMESPACE)]
         public string DictionaryKeyModelNamespace { get; set; } = DEFAULT_DICTIONARYKEY_MODEL_NAMESPACE;
 
-        [SortableCategory("Model Options", 3, 5)]
+        [SortableCategory("Model Options", 6, 8)]
         [DisplayName("DictionaryKey path")]
         [Description("A file path, relative to the project, where the dictionarykey models will be exported. Default value: " + DEFAULT_DICTIONARYKEY_MODEL_PATH)]
         [DefaultValue(DEFAULT_DICTIONARYKEY_MODEL_PATH)]
         public string DictionaryKeyModelPath { get; set; } = DEFAULT_DICTIONARYKEY_MODEL_PATH;
 
-        [SortableCategory("Service Options", 4, 5)]
+        [SortableCategory("Service Options", 7, 8)]
         [DisplayName("Service namespace")]
         [Description("A namespace for the dictionary service methods. Enter a static string and/or use valid macros: {project}, {path}. Default value: " + DEFAULT_SERVICE_NAMESPACE)]
         [DefaultValue(DEFAULT_SERVICE_NAMESPACE)]
         public string ServiceNamespace { get; set; } = DEFAULT_SERVICE_NAMESPACE;
 
-        [SortableCategory("Service Options", 4, 5)]
+        [SortableCategory("Service Options", 7, 8)]
         [DisplayName("Service path")]
         [Description("A file path, relative to the project, where the dictionary service methods will be exported. Default value: " + DEFAULT_SERVICE_PATH)]
         [DefaultValue(DEFAULT_SERVICE_PATH)]
         public string ServicePath { get; set; } = DEFAULT_SERVICE_PATH;
 
-        [SortableCategory("Service Options", 4, 5)]
+        [SortableCategory("Service Options", 7, 8)]
         [DisplayName("Interface namespace")]
         [Description("A namespace for the dictionary service interface. Enter a static string and/or use valid macros: {project}, {path}. Default value: " + DEFAULT_ISERVICE_NAMESPACE)]
         [DefaultValue(DEFAULT_ISERVICE_NAMESPACE)]
         public string IServiceNamespace { get; set; } = DEFAULT_ISERVICE_NAMESPACE;
 
-        [SortableCategory("Service Options", 4, 5)]
+        [SortableCategory("Service Options", 7, 8)]
         [DisplayName("Interface path")]
         [Description("A file path, relative to the project, where the dictionary service interface will be exported. Default value: " + DEFAULT_ISERVICE_PATH)]
         [DefaultValue(DEFAULT_ISERVICE_PATH)]
         public string IServicePath { get; set; } = DEFAULT_ISERVICE_PATH;
 
-        [SortableCategory("Extension Options", 5, 5)]
+        [SortableCategory("Extension Options", 8, 8)]
         [DisplayName("Extension namespace")]
         [Description("A namespace for the dictionary service extension methods. Enter a static string and/or use valid macros: {project}, {path}. Default value: " + DEFAULT_SERVICE_EXTENSION_NAMESPACE)]
         [DefaultValue(DEFAULT_SERVICE_EXTENSION_NAMESPACE)]
         public string ServiceExtensionNamespace { get; set; } = DEFAULT_SERVICE_EXTENSION_NAMESPACE;
 
-        [SortableCategory("Extension Options", 5, 5)]
+        [SortableCategory("Extension Options", 8, 8)]
         [DisplayName("Extension path")]
         [Description("A file path, relative to the project, where the dictionary service extension methods will be exported. Default value: " + DEFAULT_SERVICE_EXTENSION_PATH)]
         [DefaultValue(DEFAULT_SERVICE_EXTENSION_PATH)]
@@ -164,6 +302,25 @@ namespace DictionaryBuilder
         #endregion
 
         #region " Public Methods "
+
+        /// <summary>
+        /// Gets the <see cref="SqlCredentials"/> for the connection type selected in the user preferences.
+        /// </summary>
+        /// <returns>An <see cref="SqlCredentials"/> class.</returns>
+        public SqlCredentials GetSqlCredentials()
+        {
+            switch (DictionarySource)
+            {
+                case SqlConnectionType.Development:
+                    return SqlConnections.Development;
+                case SqlConnectionType.Staging:
+                    return SqlConnections.Staging;
+                case SqlConnectionType.Live:
+                    return SqlConnections.Live;
+                default:
+                    return null;
+            }
+        }
 
         /// <summary>
         /// Saves user preferences to an XML formatted file in the solution directory.
@@ -202,12 +359,14 @@ namespace DictionaryBuilder
         {
             var options = DeSerialize();
 
-            Hostname = options.Hostname;
-            Port = options.Port;
-            Database = options.Database;
-            Username = options.Username;
-            EncryptedPassword = options.EncryptedPassword;
-            PasswordMask = options.GetPassword().ToMaskedString();
+            DictionarySource = options.DictionarySource;
+            EncryptionMethod = options.EncryptionMethod;
+            SqlConnections.Development = options.SqlConnections.Development;
+            SqlConnections.Development.PasswordMask = options.SqlConnections.Development.GetPassword(EncryptionMethod).ToMaskedString();
+            SqlConnections.Staging = options.SqlConnections.Staging;
+            SqlConnections.Staging.PasswordMask = options.SqlConnections.Staging.GetPassword(EncryptionMethod).ToMaskedString();
+            SqlConnections.Live = options.SqlConnections.Live;
+            SqlConnections.Live.PasswordMask = options.SqlConnections.Live.GetPassword(EncryptionMethod).ToMaskedString();
             CultureModelNamespace = options.CultureModelNamespace;
             CultureModelPath = options.CultureModelPath;
             DictionaryModelNamespace = options.DictionaryModelNamespace;
@@ -239,9 +398,10 @@ namespace DictionaryBuilder
         /// <returns>A reference to the cleared <see cref="VisualStudioOptions"/>.</returns>
         public VisualStudioOptions Clear()
         {
-            Hostname = Database = Username = Password = null;
-            Port = DEFAULT_PORT;
+            SqlConnections = new SqlConnections();
 
+            DictionarySource = DEFAULT_DICTIONARY_SOURCE;
+            EncryptionMethod = DEFAULT_ENCRYPTION_METHOD;
             CultureModelNamespace = DEFAULT_CULTURE_MODEL_NAMESPACE;
             CultureModelPath = DEFAULT_CULTURE_MODEL_PATH;
             DictionaryModelNamespace = DEFAULT_DICTIONARY_MODEL_NAMESPACE;
@@ -256,28 +416,6 @@ namespace DictionaryBuilder
             ServiceExtensionPath = DEFAULT_SERVICE_EXTENSION_PATH;
 
             return this;
-        }
-
-        /// <summary>
-        /// Gets the decrypted SQL password credential.
-        /// </summary>
-        /// <returns>A password string.</returns>
-        public string GetPassword()
-        {
-            return EncryptionService.Aes.DecryptString(EncryptedPassword);
-        }
-
-        #endregion
-
-        #region " Private Methods "
-
-        private void SetPassword(string password)
-        {
-            if (string.IsNullOrWhiteSpace(password) || !Regex.IsMatch(password, "^[*]*$"))
-            {
-                PasswordMask = password.ToMaskedString();
-                EncryptedPassword = EncryptionService.Aes.EncryptString(password);
-            }
         }
 
         #endregion

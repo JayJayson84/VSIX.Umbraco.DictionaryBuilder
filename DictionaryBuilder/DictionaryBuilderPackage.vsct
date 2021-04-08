@@ -8,33 +8,131 @@
       <Group guid="guidDictionaryBuilderPackageCmdSet" id="DictionaryMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
       </Group>
+      <Group guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenuGroupA" priority="0x0001">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenu"/>
+      </Group>
+      <Group guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenuGroupB" priority="0x0002">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenu"/>
+      </Group>
+
+      <Group guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupA" priority="0x0001">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenu"/>
+      </Group>
+      <Group guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupB" priority="0x0002">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenu"/>
+      </Group>
+      <Group guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupC" priority="0x0003">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenu"/>
+      </Group>
     </Groups>
 
-    <Buttons>
-      <Button guid="guidDictionaryBuilderPackageCmdSet" id="RebuildDictionaryId" priority="0x0100" type="Button">
-        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionaryMenuGroup" />
-        <Icon guid="guidImages" id="bmpDictionary" />
+    <Menus>
+      <Menu guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenu" priority="0x0001" type="Menu">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionaryMenuGroup"/>
         <Strings>
-          <ButtonText>Rebuild Umbraco Dictionary</ButtonText>
+          <ButtonText>Umbraco Dictionary</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenu" priority="0x0002" type="Menu">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenuGroupB"/>
+        <Strings>
+          <ButtonText>Synchronise Database...</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+
+    <Buttons>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="RebuildDictionaryId" priority="0x0001" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenuGroupA"/>
+        <Icon guid="guidDictionaryIcons" id="bmpDictionary"/>
+        <Strings>
+          <ButtonText>Rebuild Dictionary</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="RemoveDictionaryId" priority="0x0002" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="DictionarySubmenuGroupA"/>
+        <Icon guid="guidDictionaryIcons" id="bmpDelete"/>
+        <Strings>
+          <ButtonText>Remove Dictionary</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="SyncDevelopmentToStagingId" priority="0x0001" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupA"/>
+        <Icon guid="guidDictionaryIcons" id="bmpSyncDevelopmentDB"/>
+        <Strings>
+          <ButtonText>Development to Staging</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="SyncDevelopmentToLiveId" priority="0x0002" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupA"/>
+        <Icon guid="guidDictionaryIcons" id="bmpSyncDevelopmentDB"/>
+        <Strings>
+          <ButtonText>Development to Live</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="SyncStagingToDevelopmentId" priority="0x0001" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupB"/>
+        <Icon guid="guidDictionaryIcons" id="bmpSyncStagingDB"/>
+        <Strings>
+          <ButtonText>Staging to Development</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="SyncStagingToLiveId" priority="0x0002" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupB"/>
+        <Icon guid="guidDictionaryIcons" id="bmpSyncStagingDB"/>
+        <Strings>
+          <ButtonText>Staging to Live</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="SyncLiveToDevelopmentId" priority="0x0001" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupC"/>
+        <Icon guid="guidDictionaryIcons" id="bmpSyncLiveDB"/>
+        <Strings>
+          <ButtonText>Live to Development</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDictionaryBuilderPackageCmdSet" id="SyncLiveToStaging" priority="0x0002" type="Button">
+        <Parent guid="guidDictionaryBuilderPackageCmdSet" id="SynchroniseSubmenuGroupC"/>
+        <Icon guid="guidDictionaryIcons" id="bmpSyncLiveDB"/>
+        <Strings>
+          <ButtonText>Live to Staging</ButtonText>
         </Strings>
       </Button>
     </Buttons>
 
     <Bitmaps>
-      <Bitmap guid="guidImages" href="Resources\RebuildDictionary.png" usedList="bmpDictionary"/>
+      <Bitmap guid="guidDictionaryIcons" href="Resources\DictionaryIcons.png" usedList="bmpDictionary,bmpDelete,bmpSyncDevelopmentDB,bmpSyncStagingDB,bmpSyncLiveDB"/>
     </Bitmaps>
   </Commands>
 
   <Symbols>
-    <GuidSymbol name="guidDictionaryBuilderPackage" value="{20e5525a-fdf2-4507-bec3-7baf1790d8d2}" />
+    <GuidSymbol name="guidDictionaryBuilderPackage" value="{20e5525a-fdf2-4507-bec3-7baf1790d8d2}"/>
 
     <GuidSymbol name="guidDictionaryBuilderPackageCmdSet" value="{8224636b-c695-4bb5-b9db-dc6ad3b8c1a1}">
-      <IDSymbol name="DictionaryMenuGroup" value="0x1020" />
-      <IDSymbol name="RebuildDictionaryId" value="0x0100" />
+      <IDSymbol name="DictionaryMenuGroup" value="0x1010"/>
+      <IDSymbol name="DictionarySubmenu" value="0x1011"/>
+      <IDSymbol name="DictionarySubmenuGroupA" value="0x1020"/>
+      <IDSymbol name="DictionarySubmenuGroupB" value="0x1030"/>
+      <IDSymbol name="SynchroniseSubmenu" value="0x1031"/>
+      <IDSymbol name="SynchroniseSubmenuGroupA" value="0x1040"/>
+      <IDSymbol name="SynchroniseSubmenuGroupB" value="0x1050"/>
+      <IDSymbol name="SynchroniseSubmenuGroupC" value="0x1060"/>
+      <IDSymbol name="RebuildDictionaryId" value="0x1021"/>
+      <IDSymbol name="RemoveDictionaryId" value="0x1022"/>
+      <IDSymbol name="SyncDevelopmentToStagingId" value="0x1041"/>
+      <IDSymbol name="SyncDevelopmentToLiveId" value="0x1042"/>
+      <IDSymbol name="SyncStagingToDevelopmentId" value="0x1051"/>
+      <IDSymbol name="SyncStagingToLiveId" value="0x1052"/>
+      <IDSymbol name="SyncLiveToDevelopmentId" value="0x1061"/>
+      <IDSymbol name="SyncLiveToStaging" value="0x1062"/>
     </GuidSymbol>
 
-    <GuidSymbol name="guidImages" value="{019600f3-c307-4508-a4e9-1b3d51ee0cbc}" >
-      <IDSymbol name="bmpDictionary" value="1" />
+    <GuidSymbol name="guidDictionaryIcons" value="{4cf82637-222f-4718-aa13-aff605ed7006}">
+      <IDSymbol name="bmpDictionary" value="1"/>
+      <IDSymbol name="bmpDelete" value="2"/>
+      <IDSymbol name="bmpSyncDevelopmentDB" value="3"/>
+      <IDSymbol name="bmpSyncStagingDB" value="4"/>
+      <IDSymbol name="bmpSyncLiveDB" value="5"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>

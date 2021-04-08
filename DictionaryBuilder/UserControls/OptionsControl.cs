@@ -2,7 +2,7 @@
 
 namespace DictionaryBuilder.UserControls
 {
-    public partial class OptionsControl : UserControl
+    internal sealed partial class OptionsControl : UserControl
     {
         public OptionsControl()
         {
