@@ -36,7 +36,7 @@ namespace DictionaryBuilder
         /// <summary>
         /// Command ID.
         /// </summary>
-        public const int CommandId = 0x0100;
+        public const int CommandId = 0x1021;
 
         #endregion
 
@@ -88,6 +88,10 @@ namespace DictionaryBuilder
         /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "CodeQuality", 
+            "IDE0051:Remove unused private members", 
+            Justification = "Unused auto-generated declaration")]
         private IAsyncServiceProvider ServiceProvider
         {
             get
@@ -170,9 +174,12 @@ namespace DictionaryBuilder
 
                 try
                 {
-                    var dictionary = await SqlService.GetDictionaryAsync(options);
+                    var sqlCredentials = options.GetSqlCredentials();
+                    if (sqlCredentials == null) throw new NullReferenceException("Check the SQL connection preferences in the Options dialog and try again.");
+
+                    var dictionary = await SqlService.GetDictionaryAsync(sqlCredentials, options.EncryptionMethod);
                     if (dictionary == null) throw new NullReferenceException("DictionaryDto cannot be null");
-                    var language = await SqlService.GetLanguageAsync(options);
+                    var language = await SqlService.GetLanguageAsync(sqlCredentials, options.EncryptionMethod);
                     if (language == null) throw new NullReferenceException("LanguageDto cannot be null");
 
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -182,11 +189,11 @@ namespace DictionaryBuilder
                     var tasks = new Task[]
                     {
                         Task.Run(() => DictionaryHelper.WriteLanguageCultureModel(cultureModelNamespace, cultureModelPath, language)),
-                        Task.Run(() => DictionaryHelper.WriteDictionaryModel(dictionaryModelNamespace, dictionaryModelPath, dictionary)),
+                        Task.Run(() => DictionaryHelper.WriteDictionaryModel(dictionaryModelNamespace, dictionaryKeyModelNamespace, dictionaryModelPath, dictionary)),
                         Task.Run(() => DictionaryHelper.WriteDictionaryKeyModel(dictionaryKeyModelNamespace, dictionaryKeyModelPath, dictionary)),
-                        Task.Run(() => DictionaryHelper.WriteDictionaryService(serviceNamespace, servicePath)),
+                        Task.Run(() => DictionaryHelper.WriteDictionaryService(serviceNamespace, iServiceNamespace, servicePath)),
                         Task.Run(() => DictionaryHelper.WriteDictionaryServiceInterface(iServiceNamespace, iServicePath)),
-                        Task.Run(() => DictionaryHelper.WriteDictionaryServiceExtension(serviceExtensionNamespace, serviceExtensionPath))
+                        Task.Run(() => DictionaryHelper.WriteDictionaryServiceExtension(serviceExtensionNamespace, serviceNamespace, serviceExtensionPath))
                     };
 
                     Task.WaitAll(tasks);
