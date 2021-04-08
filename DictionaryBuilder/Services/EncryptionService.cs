@@ -9,7 +9,7 @@ namespace DictionaryBuilder.Services
     internal sealed class EncryptionService
     {
         /// <summary>
-        /// 
+        /// Represents an encryption class which implements the Advanced Encryption Standard (AES).
         /// </summary>
         internal sealed class Aes
         {
@@ -60,29 +60,39 @@ namespace DictionaryBuilder.Services
             public static string EncryptString(string input, string key = null)
             {
                 if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-                if (string.IsNullOrWhiteSpace(key)) key = EncryptionKeys.SystemKey;
+                if (string.IsNullOrWhiteSpace(key)) key = EncryptionKeys.CommonKey;
 
                 byte[] encrypted;
 
-                using (var aesAlg = System.Security.Cryptography.Aes.Create()) {
-                    aesAlg.Key = key.ToSHA256Hash(aesAlg.KeySize / 8);
-                    aesAlg.IV = DateTime.MinValue.ToOADate().ToString().ToSHA256Hash(aesAlg.BlockSize / 8);
+                try
+                {
+                    using (var aesAlg = System.Security.Cryptography.Aes.Create())
+                    {
+                        aesAlg.Key = key.ToSHA256Hash(aesAlg.KeySize / 8);
+                        aesAlg.IV = DateTime.MinValue.ToOADate().ToString().ToSHA256Hash(aesAlg.BlockSize / 8);
 
-                    var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+                        var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
-                    using (var msEncrypt = new MemoryStream()) {
-                        using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write)) {
-                            using (var swEncrypt = new StreamWriter(csEncrypt))
+                        using (var msEncrypt = new MemoryStream())
+                        {
+                            using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
                             {
-                                swEncrypt.Write(input);
-                            };
+                                using (var swEncrypt = new StreamWriter(csEncrypt))
+                                {
+                                    swEncrypt.Write(input);
+                                };
 
-                            encrypted = msEncrypt.ToArray();
+                                encrypted = msEncrypt.ToArray();
+                            };
                         };
                     };
-                };
 
-                return encrypted?.ToBase64String();
+                    return encrypted?.ToBase64String();
+                }
+                catch
+                {
+                    return null;
+                }
             }
 
             /// <summary>
@@ -94,25 +104,35 @@ namespace DictionaryBuilder.Services
             public static string DecryptString(string input, string key = null)
             {
                 if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-                if (string.IsNullOrWhiteSpace(key)) key = EncryptionKeys.SystemKey;
+                if (string.IsNullOrWhiteSpace(key)) key = EncryptionKeys.CommonKey;
 
                 var cipher = input.FromBase64String();
 
-                using (var aesAlg = System.Security.Cryptography.Aes.Create()) {
-                    aesAlg.Key = key.ToSHA256Hash(aesAlg.KeySize / 8);
-                    aesAlg.IV = DateTime.MinValue.ToOADate().ToString().ToSHA256Hash(aesAlg.BlockSize / 8);
+                try
+                {
+                    using (var aesAlg = System.Security.Cryptography.Aes.Create())
+                    {
+                        aesAlg.Key = key.ToSHA256Hash(aesAlg.KeySize / 8);
+                        aesAlg.IV = DateTime.MinValue.ToOADate().ToString().ToSHA256Hash(aesAlg.BlockSize / 8);
 
-                    var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                        var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
-                    using (var msDecrypt = new MemoryStream(cipher)) {
-                        using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read)) {
-                            using (var srDecrypt = new StreamReader(csDecrypt))
+                        using (var msDecrypt = new MemoryStream(cipher))
+                        {
+                            using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                             {
-                                return srDecrypt.ReadToEnd();
+                                using (var srDecrypt = new StreamReader(csDecrypt))
+                                {
+                                    return srDecrypt.ReadToEnd();
+                                };
                             };
                         };
                     };
-                };
+                }
+                catch
+                {
+                    return null;
+                }
             }
 
             #endregion " Static Methods "

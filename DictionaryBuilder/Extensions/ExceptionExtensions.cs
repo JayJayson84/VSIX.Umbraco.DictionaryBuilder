@@ -3,7 +3,7 @@ using System.Text;
 
 namespace DictionaryBuilder.Extensions
 {
-    public static class Exceptions
+    internal static class Exceptions
     {
 
         /// <summary>

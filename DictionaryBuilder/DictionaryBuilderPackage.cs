@@ -49,6 +49,13 @@ namespace DictionaryBuilder
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await RebuildDictionary.InitializeAsync(this);
+            await RemoveDictionary.InitializeAsync(this);
+            await SyncDevelopmentToStaging.InitializeAsync(this);
+            await SyncDevelopmentToLive.InitializeAsync(this);
+            await SyncStagingToDevelopment.InitializeAsync(this);
+            await SyncStagingToLive.InitializeAsync(this);
+            await SyncLiveToDevelopment.InitializeAsync(this);
+            await SyncLiveToStaging.InitializeAsync(this);
         }
 
         #endregion

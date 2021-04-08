@@ -27,6 +27,8 @@ namespace DictionaryBuilder
         /// <param name="activate"><see langword="true"/> to show and activate the Output window pane. Otherwise <see langword="false"/>.</param>
         public static void WriteFirstLog(string message, bool activate = false)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             ClearWindow();
 
             message = $"Operation Started on {DateTime.Now:dd/MM/yyyy HH:mm:ss}\n\n{(!message.EndsWith("\n") ? message + "\n" : message)}";
