@@ -21,6 +21,8 @@ namespace DictionaryBuilder
 
         protected override void OnActivate(CancelEventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             base.OnActivate(e);
 
             VisualStudioOptions.Instance.Reload();
