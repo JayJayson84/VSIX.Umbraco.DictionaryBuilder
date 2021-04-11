@@ -124,27 +124,6 @@ namespace DictionaryBuilder.Services
         }
 
         /// <summary>
-        /// Tests if a connection to the SQL server is successful.
-        /// </summary>
-        /// <param name="credentials">The <see cref="SqlCredentials"/> for the connection.</param>
-        /// <param name="encryptionMethod">The type of key to use when decrypting the SQL password.</param>
-        /// <returns><see langword="True"/> if the connection is successful. Otherwise <see langword="false"/>.</returns>
-        public static async Task<bool> TestConnectionAsync(SqlCredentials credentials, EncryptionMethod encryptionMethod)
-        {
-            return await Task.Run(async () =>
-            {
-                if (credentials == null) return false;
-
-                var connectionString = credentials.GetConnectionString(encryptionMethod);
-
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    return await OpenConnectionAsync(connection);
-                }
-            });
-        }
-
-        /// <summary>
         /// Opens a connection to the SQL server and runs a test command.
         /// </summary>
         /// <param name="connection">The <see cref="SqlConnection"/> to open.</param>
@@ -283,49 +262,6 @@ namespace DictionaryBuilder.Services
         }
 
         /// <summary>
-        /// Connects to the source SQL server and attempts to bulk copy the database table, with the name provided, into the destination SQL server.
-        /// </summary>
-        /// <param name="sourceCredentials">The <see cref="SqlCredentials"/> for the source connection.</param>
-        /// <param name="targetCredentials">The <see cref="SqlCredentials"/> for the destination connection.</param>
-        /// <param name="encryptionMethod">The type of key to use when decrypting the SQL passwords.</param>
-        /// <param name="tableName">The name of the table to copy.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public static async Task BulkCopyTableAsync(SqlCredentials sourceCredentials, SqlCredentials targetCredentials, EncryptionMethod encryptionMethod, string tableName)
-        {
-            await Task.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{sourceCredentials.Hostname}'...");
-                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{targetCredentials.Hostname}'...");
-                await TaskScheduler.Default;
-
-                var sourceConnectionString = sourceCredentials.GetConnectionString(encryptionMethod);
-                var targetConnectionString = targetCredentials.GetConnectionString(encryptionMethod);
-
-                try
-                {
-                    using (var sourceConnection = new SqlConnection(sourceConnectionString))
-                    {
-                        var sourceCommand = sourceConnection.CreateCommand();
-                        sourceCommand.Connection = sourceConnection;
-
-                        await sourceConnection.OpenAsync();
-
-                        using (var targetConnection = new SqlConnection(targetConnectionString))
-                        {
-                            await targetConnection.OpenAsync();
-                            await BulkCopyTableAsync(sourceCommand, targetConnection, tableName);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Database error, {ex.Message}.");
-                }
-            });
-        }
-
-        /// <summary>
         /// Attempts to bulk copy the database table, with the name provided, into the destination SQL server.
         /// </summary>
         /// <param name="sourceCommand">An <see cref="SqlCommand"/> provided by an open connection to the source database.</param>
@@ -425,41 +361,6 @@ namespace DictionaryBuilder.Services
         }
 
         /// <summary>
-        /// Connects to the SQL server and attempts to truncate the table with the name provided.
-        /// </summary>
-        /// <param name="credentials">The <see cref="SqlCredentials"/> for the connection.</param>
-        /// <param name="encryptionMethod">The type of key to use when decrypting the SQL password.</param>
-        /// <param name="tableName">The name of the table to truncate.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public static async Task TruncateTableAsync(SqlCredentials credentials, EncryptionMethod encryptionMethod, string tableName)
-        {
-            await Task.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{credentials.Hostname}'...");
-                await TaskScheduler.Default;
-
-                var connectionString = credentials.GetConnectionString(encryptionMethod);
-
-                try
-                {
-                    using (var connection = new SqlConnection(connectionString))
-                    {
-                        var command = connection.CreateCommand();
-                        command.Connection = connection;
-
-                        await connection.OpenAsync();
-                        await TruncateTableAsync(command, tableName);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Database error, {ex.Message}.");
-                }
-            });
-        }
-
-        /// <summary>
         /// Attempts to truncate the table with the name provided.
         /// </summary>
         /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
@@ -474,63 +375,6 @@ namespace DictionaryBuilder.Services
                 await TaskScheduler.Default;
 
                 command.CommandText = $"TRUNCATE TABLE [dbo].[{tableName}]";
-                await command.ExecuteNonQueryAsync();
-            });
-        }
-
-        /// <summary>
-        /// Connects to the SQL server and attempts to delete all rows from the table with the name provided. Reverts the table seed back to zero.
-        /// </summary>
-        /// <param name="credentials">The <see cref="SqlCredentials"/> for the connection.</param>
-        /// <param name="encryptionMethod">The type of key to use when decrypting the SQL password.</param>
-        /// <param name="tableName">The name of the table.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public static async Task DeleteAndReseedTableAsync(SqlCredentials credentials, EncryptionMethod encryptionMethod, string tableName)
-        {
-            await Task.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{credentials.Hostname}'...");
-                await TaskScheduler.Default;
-
-                var connectionString = credentials.GetConnectionString(encryptionMethod);
-
-                try
-                {
-                    using (var connection = new SqlConnection(connectionString))
-                    {
-                        var command = connection.CreateCommand();
-                        command.Connection = connection;
-
-                        await connection.OpenAsync();
-                        await DeleteAndReseedTableAsync(command, tableName);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Database error, {ex.Message}.");
-                }
-            });
-        }
-
-        /// <summary>
-        /// Attempts to delete all rows from the table with the name provided. Reverts the table seed back to zero.
-        /// </summary>
-        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
-        /// <param name="tableName">The name of the table.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public static async Task DeleteAndReseedTableAsync(SqlCommand command, string tableName)
-        {
-            await Task.Run(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Truncating table [dbo].[{tableName}]...");
-                await TaskScheduler.Default;
-
-                command.CommandText = $@"
-                    DELETE FROM [dbo].[{tableName}];
-                    DBCC CHECKIDENT ('[dbo].[{tableName}]',RESEED,0);
-                ";
                 await command.ExecuteNonQueryAsync();
             });
         }
