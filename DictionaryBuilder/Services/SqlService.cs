@@ -133,44 +133,60 @@ namespace DictionaryBuilder.Services
         {
             return await Task.Run(async () =>
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Testing connection to SQL host '{credentials.Hostname}'...");
-                await TaskScheduler.Default;
-
                 if (credentials == null) return false;
 
                 var connectionString = credentials.GetConnectionString(encryptionMethod);
+
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    return await OpenConnectionAsync(connection);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Opens a connection to the SQL server and runs a test command.
+        /// </summary>
+        /// <param name="connection">The <see cref="SqlConnection"/> to open.</param>
+        /// <returns><see langword="True"/> if the connection and test command succeeds. Otherwise <see langword="false"/>.</returns>
+        public static async Task<bool> OpenConnectionAsync(SqlConnection connection)
+        {
+            return await Task.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{connection.DataSource}'...");
+                await TaskScheduler.Default;
+
+                if (connection == null) return false;
+
                 var queryString = "SELECT 1";
-                var result = false;
+                bool result;
 
                 try
                 {
-                    using (var connection = new SqlConnection(connectionString))
+                    object value;
+                    SqlCommand command = null;
+
+                    if (connection.State != System.Data.ConnectionState.Open)
                     {
-                        object value;
-                        SqlCommand command = null;
-
-                        command = new SqlCommand(queryString, connection);
                         await connection.OpenAsync();
-                        value = await command.ExecuteScalarAsync();
-                        value = value == DBNull.Value ? null : value;
-                        result = Convert.ToInt32(value) == 1;
-
-                        var logMessage = result
-                            ? "DictionaryBuilder: Connection passed."
-                            : "DictionaryBuilder: Connection failed.";
-
-                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                        LogHelper.LogToWindow(logMessage);
-                        await TaskScheduler.Default;
                     }
+
+                    command = new SqlCommand(queryString, connection);
+                    value = await command.ExecuteScalarAsync();
+                    value = value == DBNull.Value ? null : value;
+                    result = Convert.ToInt32(value) == 1;
                 }
                 catch (Exception)
+                {
+                    result = false;
+                }
+
+                if (!result)
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     LogHelper.LogToWindow("DictionaryBuilder: Connection failed.");
                     await TaskScheduler.Default;
-                    result = false;
                 }
 
                 return result;
@@ -188,18 +204,81 @@ namespace DictionaryBuilder.Services
         {
             await Task.Run(async () =>
             {
-                if (!await TestConnectionAsync(sourceCredentials, encryptionMethod) || !await TestConnectionAsync(targetCredentials, encryptionMethod))
+                var sourceConnectionString = sourceCredentials.GetConnectionString(encryptionMethod);
+
+                using (var sourceConnection = new SqlConnection(sourceConnectionString))
                 {
-                    throw new ArgumentException("Check the SQL connection preferences in the Options dialog and try again.");
+                    if (!await OpenConnectionAsync(sourceConnection))
+                    {
+                        throw new ArgumentException("Check the SQL connection preferences in the Options dialog and try again.");
+                    };
+
+                    var targetConnectionString = targetCredentials.GetConnectionString(encryptionMethod);
+
+                    using (var targetConnection = new SqlConnection(targetConnectionString))
+                    {
+                        if (!await OpenConnectionAsync(targetConnection))
+                        {
+                            throw new ArgumentException("Check the SQL connection preferences in the Options dialog and try again.");
+                        };
+
+                        var targetCommand = targetConnection.CreateCommand();
+                        var targetTransaction = targetConnection.BeginTransaction();
+
+                        targetCommand.Connection = targetConnection;
+                        targetCommand.Transaction = targetTransaction;
+
+                        await DropConstraintsAsync(targetCommand, targetCredentials.Constraints);
+                        await TruncateTableAsync(targetCommand, "cmsDictionary");
+                        await TruncateTableAsync(targetCommand, "cmsLanguageText");
+                        await AddConstraintsAsync(targetCommand, targetCredentials.Constraints);
+
+                        try
+                        {
+                            targetTransaction.Commit();
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                targetTransaction.Rollback();
+                            }
+                            catch (Exception)
+                            {
+                                throw new Exception($"An error occurred attempting to truncate tables from {targetCredentials.Hostname} and drop contraints. Transaction rollback failed.");
+                            }
+
+                            throw new Exception($"An error occurred attempting to truncate tables from {targetCredentials.Hostname} and drop contraints. Transaction rolled back successfully.");
+                        }
+
+                        var sourceCommand = sourceConnection.CreateCommand();
+                        var sourceTransaction = sourceConnection.BeginTransaction();
+
+                        sourceCommand.Connection = sourceConnection;
+                        sourceCommand.Transaction = sourceTransaction;
+
+                        await BulkCopyTableAsync(sourceCommand, targetConnection, "cmsDictionary");
+                        await BulkCopyTableAsync(sourceCommand, targetConnection, "cmsLanguageText");
+
+                        try
+                        {
+                            sourceTransaction.Commit();
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                sourceTransaction.Rollback();
+                            }
+                            catch (Exception)
+                            {
+                                throw new Exception($"An error occurred attempting to bulk copy tables from {sourceCredentials.Hostname} to {targetCredentials.Hostname}. Transaction rollback failed.");
+                            }
+
+                            throw new Exception($"An error occurred attempting to bulk copy tables from {sourceCredentials.Hostname} to {targetCredentials.Hostname}. Transaction rolled back successfully.");
+                        }
+                    }
                 }
-
-                await DeleteAndReseedTableAsync(targetCredentials, encryptionMethod, "umbracoLanguage");
-                await DeleteAndReseedTableAsync(targetCredentials, encryptionMethod, "cmsDictionary");
-                await TruncateTableAsync(targetCredentials, encryptionMethod, "cmsLanguageText");
-
-                await BulkCopyTableAsync(sourceCredentials, targetCredentials, encryptionMethod, "umbracoLanguage");
-                await BulkCopyTableAsync(sourceCredentials, targetCredentials, encryptionMethod, "cmsDictionary");
-                await BulkCopyTableAsync(sourceCredentials, targetCredentials, encryptionMethod, "cmsLanguageText");
             });
         }
 
@@ -216,35 +295,26 @@ namespace DictionaryBuilder.Services
             await Task.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Synchronising table [dbo].[{tableName}]...");
+                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{sourceCredentials.Hostname}'...");
+                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{targetCredentials.Hostname}'...");
                 await TaskScheduler.Default;
 
                 var sourceConnectionString = sourceCredentials.GetConnectionString(encryptionMethod);
                 var targetConnectionString = targetCredentials.GetConnectionString(encryptionMethod);
-                var sourceQueryString = $"SELECT * FROM [dbo].[{tableName}]";
 
                 try
                 {
                     using (var sourceConnection = new SqlConnection(sourceConnectionString))
                     {
-                        SqlCommand command = null;
-
-                        command = new SqlCommand(sourceQueryString, sourceConnection);
+                        var sourceCommand = sourceConnection.CreateCommand();
+                        sourceCommand.Connection = sourceConnection;
 
                         await sourceConnection.OpenAsync();
 
-                        using (var reader = await command.ExecuteReaderAsync())
+                        using (var targetConnection = new SqlConnection(targetConnectionString))
                         {
-                            using (var targetConnection = new SqlConnection(targetConnectionString))
-                            {
-                                await targetConnection.OpenAsync();
-
-                                using (var bulkCopy = new SqlBulkCopy(targetConnection))
-                                {
-                                    bulkCopy.DestinationTableName = $"[dbo].[{tableName}]";
-                                    await bulkCopy.WriteToServerAsync(reader);
-                                }
-                            }
+                            await targetConnection.OpenAsync();
+                            await BulkCopyTableAsync(sourceCommand, targetConnection, tableName);
                         }
                     }
                 }
@@ -252,6 +322,105 @@ namespace DictionaryBuilder.Services
                 {
                     throw new Exception($"Database error, {ex.Message}.");
                 }
+            });
+        }
+
+        /// <summary>
+        /// Attempts to bulk copy the database table, with the name provided, into the destination SQL server.
+        /// </summary>
+        /// <param name="sourceCommand">An <see cref="SqlCommand"/> provided by an open connection to the source database.</param>
+        /// <param name="targetConnection">An opened <see cref="SqlConnection"/> to the destination database.</param>
+        /// <param name="tableName">The name of the table to copy.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task BulkCopyTableAsync(SqlCommand sourceCommand, SqlConnection targetConnection, string tableName)
+        {
+            await Task.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                LogHelper.LogToWindow($"DictionaryBuilder: Synchronising table [dbo].[{tableName}]...");
+                await TaskScheduler.Default;
+
+                sourceCommand.CommandText = $"SELECT * FROM [dbo].[{tableName}]";
+                using (var reader = await sourceCommand.ExecuteReaderAsync())
+                {
+                    using (var bulkCopy = new SqlBulkCopy(targetConnection))
+                    {
+                        bulkCopy.DestinationTableName = $"[dbo].[{tableName}]";
+                        await bulkCopy.WriteToServerAsync(reader);
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Drops a collection of database table <paramref name="constraints"/>.
+        /// </summary>
+        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
+        /// <param name="constraints">The collection of <see cref="SqlConstraints"/> to drop.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task DropConstraintsAsync(SqlCommand command, SqlConstraints constraints)
+        {
+            await Task.Run(async () =>
+            {
+                foreach (var constraint in constraints)
+                {
+                    await DropConstraintAsync(command, constraint);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Drops a database table <paramref name="constraint"/>.
+        /// </summary>
+        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
+        /// <param name="constraint">The <see cref="SqlConstraint"/> to drop.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task DropConstraintAsync(SqlCommand command, SqlConstraint constraint)
+        {
+            await Task.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                LogHelper.LogToWindow($"DictionaryBuilder: Dropping constraint '{constraint.Name}'...");
+                await TaskScheduler.Default;
+
+                command.CommandText = constraint.DropConstraintCommandText;
+                await command.ExecuteNonQueryAsync();
+            });
+        }
+
+        /// <summary>
+        /// Adds a collection of database table <paramref name="constraints"/>.
+        /// </summary>
+        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
+        /// <param name="constraints">The collection of <see cref="SqlConstraints"/> to add.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task AddConstraintsAsync(SqlCommand command, SqlConstraints constraints)
+        {
+            await Task.Run(async () =>
+            {
+                foreach (var constraint in constraints)
+                {
+                    await AddConstraintAsync(command, constraint);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Adds a database table <paramref name="constraint"/>.
+        /// </summary>
+        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
+        /// <param name="constraint">The <see cref="SqlConstraint"/> to add.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task AddConstraintAsync(SqlCommand command, SqlConstraint constraint)
+        {
+            await Task.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                LogHelper.LogToWindow($"DictionaryBuilder: Adding constraint '{constraint.Name}'...");
+                await TaskScheduler.Default;
+
+                command.CommandText = constraint.AddConstraintCommandText;
+                await command.ExecuteNonQueryAsync();
             });
         }
 
@@ -267,28 +436,45 @@ namespace DictionaryBuilder.Services
             await Task.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Truncating table [dbo].[{tableName}]...");
+                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{credentials.Hostname}'...");
                 await TaskScheduler.Default;
 
                 var connectionString = credentials.GetConnectionString(encryptionMethod);
-                var queryString = $"TRUNCATE TABLE [dbo].[{tableName}]";
 
                 try
                 {
                     using (var connection = new SqlConnection(connectionString))
                     {
-                        SqlCommand command = null;
-
-                        command = new SqlCommand(queryString, connection);
+                        var command = connection.CreateCommand();
+                        command.Connection = connection;
 
                         await connection.OpenAsync();
-                        await command.ExecuteNonQueryAsync();
+                        await TruncateTableAsync(command, tableName);
                     }
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Database error, {ex.Message}.");
                 }
+            });
+        }
+
+        /// <summary>
+        /// Attempts to truncate the table with the name provided.
+        /// </summary>
+        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
+        /// <param name="tableName">The name of the table to truncate.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task TruncateTableAsync(SqlCommand command, string tableName)
+        {
+            await Task.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                LogHelper.LogToWindow($"DictionaryBuilder: Truncating table [dbo].[{tableName}]...");
+                await TaskScheduler.Default;
+
+                command.CommandText = $"TRUNCATE TABLE [dbo].[{tableName}]";
+                await command.ExecuteNonQueryAsync();
             });
         }
 
@@ -304,31 +490,48 @@ namespace DictionaryBuilder.Services
             await Task.Run(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                LogHelper.LogToWindow($"DictionaryBuilder: Truncating table [dbo].[{tableName}]...");
+                LogHelper.LogToWindow($"DictionaryBuilder: Opening connection to SQL host '{credentials.Hostname}'...");
                 await TaskScheduler.Default;
 
                 var connectionString = credentials.GetConnectionString(encryptionMethod);
-                var queryString = $@"
-                    DELETE FROM [dbo].[{tableName}];
-                    DBCC CHECKIDENT ('[dbo].[{tableName}]',RESEED,0);
-                ";
 
                 try
                 {
                     using (var connection = new SqlConnection(connectionString))
                     {
-                        SqlCommand command = null;
-
-                        command = new SqlCommand(queryString, connection);
+                        var command = connection.CreateCommand();
+                        command.Connection = connection;
 
                         await connection.OpenAsync();
-                        await command.ExecuteNonQueryAsync();
+                        await DeleteAndReseedTableAsync(command, tableName);
                     }
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Database error, {ex.Message}.");
                 }
+            });
+        }
+
+        /// <summary>
+        /// Attempts to delete all rows from the table with the name provided. Reverts the table seed back to zero.
+        /// </summary>
+        /// <param name="command">An <see cref="SqlCommand"/> provided by an open connection to the database.</param>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public static async Task DeleteAndReseedTableAsync(SqlCommand command, string tableName)
+        {
+            await Task.Run(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                LogHelper.LogToWindow($"DictionaryBuilder: Truncating table [dbo].[{tableName}]...");
+                await TaskScheduler.Default;
+
+                command.CommandText = $@"
+                    DELETE FROM [dbo].[{tableName}];
+                    DBCC CHECKIDENT ('[dbo].[{tableName}]',RESEED,0);
+                ";
+                await command.ExecuteNonQueryAsync();
             });
         }
 
