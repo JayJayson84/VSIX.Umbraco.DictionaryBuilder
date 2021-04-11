@@ -11,12 +11,18 @@ namespace DictionaryBuilder.Models
         public const int DEFAULT_PORT = 1433;
         public const string DEFAULT_PORT_STRING = "1433";
 
+        public SqlCredentials()
+        {
+            Constraints = new SqlConstraints();
+        }
+
         public string Hostname { get; set; }
         public int Port { get; set; } = DEFAULT_PORT;
         public string Database { get; set; }
         public string Username { get; set; }
         [XmlElement(elementName: "Password")] public string EncryptedPassword { get; set; }
         [XmlIgnore] public string PasswordMask { get; set; }
+        [XmlIgnore] public SqlConstraints Constraints { get; }
         [XmlIgnore] public static SqlCredentials Empty => new SqlCredentials();
 
         /// <summary>
