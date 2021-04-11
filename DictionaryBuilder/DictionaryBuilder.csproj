@@ -76,6 +76,8 @@
     <Compile Include="Models\DictionaryItemDto.cs" />
     <Compile Include="Models\EncryptionKeys.cs" />
     <Compile Include="Models\SqlConnections.cs" />
+    <Compile Include="Models\SqlConstraint.cs" />
+    <Compile Include="Models\SqlConstraints.cs" />
     <Compile Include="Models\SqlCredentials.cs" />
     <Compile Include="Options\OptionsDialog.cs">
       <SubType>Component</SubType>
