@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="DictionaryBuilder.d201ba62-822a-4e8b-9a44-4ab34962caa4" Version="1.2.1" Language="en-US" Publisher="JayJayson" />
+        <Identity Id="DictionaryBuilder.d201ba62-822a-4e8b-9a44-4ab34962caa4" Version="1.2.2" Language="en-US" Publisher="JayJayson" />
         <DisplayName>Umbraco DictionaryBuilder Extension</DisplayName>
         <Description xml:space="preserve">An unofficial Visual Studio extension for generating a strongly typed dictionary service and models for Umbraco.</Description>
         <Icon>32x32-dictionary.ico</Icon>
