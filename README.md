@@ -22,35 +22,35 @@ DictionaryBuilder is an unofficial Visual Studio extension for generating a stro
 
 ### Configuring Options
 1. Extension options can be configured in Visual Studio by navigating to:<br/>**Tools > Options > Umbraco > DictionaryBuilder Options**:<br/>
-![Options Dialog](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/01-options/01-options-dialog.png)
+![Options Dialog](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/01-options/01-options-dialog.png)
 1. A complete list of user preferences with the default option values and example SQL connection data can be viewed below (more information about each setting is shown below the property grid when highlighting an option):<br/>
-![User Preferences](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/01-options/02-user-preferences.png)
+![User Preferences](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/01-options/02-user-preferences.png)
 1. The options file is saved in the same location as the solution using the naming convention:<br/>`<solution name>.UmbracoDictionary.user`. SQL passwords are encrypted using a **System Key** or **Common Key** as defined by the **Encryption Method** setting (see above screenshot) allowing you to commit this file into your repository.<br/>
-![Options File](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/01-options/03-options-file.png)
+![Options File](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/01-options/03-options-file.png)
 1. The contents of the file is serialised using XML e.g.<br/>
-![Options File Contents](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/01-options/04-options-file-xml.png)
+![Options File Contents](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/01-options/04-options-file-xml.png)
 
 ### (Re)building Dictionary
 1. An **Umbraco Dictionary** context menu is available when right clicking on any project within the **Solution Explorer**. Click on the **Rebuild Dictionary** command to export the latest version of the dictionary models along with a service, extension classes and interfaces etc:<br/>
-![Rebuild Dictionary Command](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/02-rebuild-dictionary-command/01-rebuild-dictionary-command.png)
+![Rebuild Dictionary Command](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/02-rebuild-dictionary-command/01-rebuild-dictionary-command.png)
 1. The exported files will be written to the paths defined in the extension options e.g:<br/>
-![Exported Files Example](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/02-rebuild-dictionary-command/02-solution-explorer.png)
+![Exported Files Example](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/02-rebuild-dictionary-command/02-solution-explorer.png)
 1. Progress is written to the output window along with any error messages:<br/>
-![Export Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/02-rebuild-dictionary-command/03-output-status.png)
+![Export Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/02-rebuild-dictionary-command/03-output-status.png)
 
 ### Synchronise Database Tables
 1. It is possible to synchronise the dictionary database tables between **development**, **staging** and **live** deployments.<br/>**IMPORTANT:** It is strongly recommended to backup the destination database before doing so. The language table is not synchronised and it is therefore suggested that you check that the languages and id's match between deployments - otherwise dictionary values may be assigned to the wrong language after synchronising:<br/>
-![Synchronise Dictionary Command](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/03-synchronise-dictionary-command/01-synchronise-dictionary-command.png)
+![Synchronise Dictionary Command](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/03-synchronise-dictionary-command/01-synchronise-dictionary-command.png)
 1. You will be prompted to confirm your selection before the synchronisation begins:<br/>
-![Synchronisation Prompt](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/03-synchronise-dictionary-command/02-backup-prompt.png)
+![Synchronisation Prompt](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/03-synchronise-dictionary-command/02-backup-prompt.png)
 1. Progress is written to the output window along with any error messages:<br/>
-![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/03-synchronise-dictionary-command/03-output-status.png)
+![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/03-synchronise-dictionary-command/03-output-status.png)
 
 ### Example Source Code
-1. An example of the source code generated by the DictionaryBuilder can be found in this repository folder: [Example Code](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/tree/feature/documentation/Documentation/ExampleCode).
+1. An example of the source code generated by the DictionaryBuilder can be found in this repository folder: [Example Code](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/ExampleCode).
 1. The example code is based on the following Umbraco dictionary structure which contains event messages to alert a content editor if they attempt to delete a node where this action has been disabled for their access level:<br/>
-![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/04-example-code/01-cms-dictionary.png)
+![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/04-example-code/01-cms-dictionary.png)
 1. When the content editor attempts to delete a configuration node e.g:<br/>
-![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/04-example-code/02-delete-node.png)
+![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/04-example-code/02-delete-node.png)
 1. An alert is shown to the content editor. In this case the alert message is retrieved from the Umbraco dictionary using the exported DictionaryBuilder service and strongly typed class models (see the commented examples in [ExampleUsage.cs](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/ExampleCode/ExampleUsage.cs) for more details):<br/>
-![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/feature/documentation/Documentation/Images/04-example-code/03-alert-message.png)
+![Synchronisation Status](https://github.com/JayJayson84/VSIX.Umbraco.DictionaryBuilder/blob/main/Documentation/Images/04-example-code/03-alert-message.png)
