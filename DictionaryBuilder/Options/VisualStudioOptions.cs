@@ -23,11 +23,11 @@ namespace DictionaryBuilder
         public const EncryptionMethod DEFAULT_ENCRYPTION_METHOD = EncryptionMethod.Common;
         public const string DEFAULT_NAMESPACE = "{project}.{path}";
         public const string DEFAULT_CULTURE_MODEL_PATH = "/Models/Dictionary/UmbracoCulture.cs";
-        public const string DEFAULT_CULTURE_MODEL_NAMESPACE = "Umbraco.Core.Models.Language";
+        public const string DEFAULT_CULTURE_MODEL_NAMESPACE = "Umbraco.Core.Models";
         public const string DEFAULT_DICTIONARY_MODEL_PATH = "/Models/Dictionary/Dictionary.cs";
-        public const string DEFAULT_DICTIONARY_MODEL_NAMESPACE = "Umbraco.Core.Models.Dictionary";
+        public const string DEFAULT_DICTIONARY_MODEL_NAMESPACE = "Umbraco.Core.Models";
         public const string DEFAULT_DICTIONARYKEY_MODEL_PATH = "/Models/Dictionary/DictionaryKey.cs";
-        public const string DEFAULT_DICTIONARYKEY_MODEL_NAMESPACE = "Umbraco.Core.Models.Dictionary";
+        public const string DEFAULT_DICTIONARYKEY_MODEL_NAMESPACE = "Umbraco.Core.Models";
         public const string DEFAULT_SERVICE_PATH = "/Services/Implement/DictionaryService.cs";
         public const string DEFAULT_SERVICE_NAMESPACE = "Umbraco.Core.Services.Implement";
         public const string DEFAULT_ISERVICE_PATH = "/Services/IDictionaryService.cs";
