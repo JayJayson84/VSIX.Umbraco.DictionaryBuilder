@@ -17,7 +17,7 @@ DictionaryBuilder is an unofficial Visual Studio extension for generating a stro
 1. Clone the repository.
 1. Open in Visual Studio.
 1. Build the solution.
-1. In Windows Explorer, navigate to **\DictionaryBuilder\bin\{Debug/Release}** in your solution's folder.
+1. In Windows Explorer, navigate to **\DictionaryBuilder\bin&#92;{Debug/Release}** in your solution's folder.
 1. Locate and install **DictionaryBuilder.vsix**.
 
 ### Configuring Options
