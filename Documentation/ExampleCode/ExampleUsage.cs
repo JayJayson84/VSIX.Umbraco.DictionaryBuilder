@@ -52,27 +52,31 @@ namespace Example.Components
                 var messageA = _dictionaryService
                     // Get a DictionaryItem using the strongly typed Dictionary class members.
                     .GetDictionaryItemByKey(Dictionary.Events.System.DeleteActionDisabled)
-                    // Use an extension method to return the value formatted using the arguments provided.
+                    // Use an extension method to return the value, for the default site culture,
+					// with format items e.g. {0}, {1} etc. replaced by an array of format args.
                     .GetFormattedLocaleValue(new[] { entity.Name });
 
                 var messageB = _dictionaryService
                     // Get a DictionaryItem using the strongly typed Dictionary class members.
                     .GetDictionaryItemByKey(Dictionary.Events.System.DeleteActionDisabled)
-                    // Use an extension method to return the value.
+                    // Use an extension method to return the value for the default site culture.
                     .GetLocaleValue();
 
                 var messageC = _dictionaryService
                     // Get a DictionaryItem using the strongly typed DictionaryKeys members.
                     .GetDictionaryItemByKey(DictionaryKeys.DeleteActionDisabled)
-                    // The value is returned for the default site culture if ommitted.
-                    .GetLocaleValue();
+                    // Use an extension method to return the value, using a strongly typed UmbracoCulture,
+					// with format items e.g. {0}, {1} etc. replaced by an array of format args.
+                    .GetFormattedLocaleValue(new[] { entity.Name }, UmbracoCultures.EnglishGB);
 
                 var messageD = _dictionaryService
+					// Get a DictionaryItem using the strongly typed DictionaryKeys members.
                     .GetDictionaryItemByKey(DictionaryKeys.DeleteActionDisabled)
                     // Use an extension method to return the value using the default site culture.
                     .GetLocaleValue(UmbracoCulture.Default);
 
                 var messageE = _dictionaryService
+					// Get a DictionaryItem using the strongly typed DictionaryKeys members.
                     .GetDictionaryItemByKey(DictionaryKeys.DeleteActionDisabled)
                     // Use an extension method to return the value using a strongly typed UmbracoCultures member.
                     .GetLocaleValue(UmbracoCultures.EnglishGB);
